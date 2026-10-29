@@ -1,0 +1,160 @@
+{
+  "name": "Cristal Azul - Gestion de Consultas IA (base inicial)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cristal-azul-consultas",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a6f87d5b-9c30-4f2a-85d7-3c2f4b60a101",
+      "name": "01 - Recibir consulta (Webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "cristal-azul-consultas"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-name",
+              "leftValue": "={{ $json.body.nombre }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-email",
+              "leftValue": "={{ $json.body.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-service",
+              "leftValue": "={{ $json.body.servicio }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-location",
+              "leftValue": "={{ $json.body.ubicacion }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b7f87d5b-9c30-4f2a-85d7-3c2f4b60a102",
+      "name": "02 - Validar datos obligatorios",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, estado: 'Pendiente de integraciones', mensaje: 'La consulta pasó la validación inicial. Conectar Airtable, OpenAI y aprobación humana antes de usar en producción.', nombre: $json.body.nombre, email: $json.body.email, servicio: $json.body.servicio, ubicacion: $json.body.ubicacion } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "c8f87d5b-9c30-4f2a-85d7-3c2f4b60a103",
+      "name": "03 - Responder consulta válida",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        540,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, estado: 'Datos incompletos', mensaje: 'Completá nombre, email, servicio y ubicación para continuar.' } }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "d9f87d5b-9c30-4f2a-85d7-3c2f4b60a104",
+      "name": "04 - Responder datos incompletos",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        540,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "01 - Recibir consulta (Webhook)": {
+      "main": [
+        [
+          {
+            "node": "02 - Validar datos obligatorios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 - Validar datos obligatorios": {
+      "main": [
+        [
+          {
+            "node": "03 - Responder consulta válida",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "04 - Responder datos incompletos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
